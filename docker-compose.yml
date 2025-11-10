@@ -9,7 +9,7 @@ services:
       - .env
     volumes:
       - ./data:/app/data
-      - ./database.db:/app/database.db
+      - ./:/app
     environment:
       - TZ=Asia/Tashkent
     networks:
@@ -23,5 +23,3 @@ services:
 networks:
   bot_network:
     driver: bridge
-
-

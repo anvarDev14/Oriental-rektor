@@ -16,6 +16,9 @@ RUN apt-get update && \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Data papkasini yaratish va ruxsat berish
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 # Requirements faylini nusxalash va o'rnatish
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -23,8 +26,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Bot fayllarini nusxalash
 COPY . .
 
-# Database uchun volume
-VOLUME ["/app/data"]
+# Database uchun ruxsat
+RUN chmod 777 /app
 
 # Bot ishga tushirish
 CMD ["python", "app.py"]

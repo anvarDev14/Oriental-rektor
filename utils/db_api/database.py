@@ -1,9 +1,15 @@
 import sqlite3
+import os
 from typing import List
 
 
 class Database:
     def __init__(self, path_to_db="database.db"):
+        # Database uchun papka yaratish
+        db_dir = os.path.dirname(path_to_db)
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
+
         self.path_to_db = path_to_db
 
     @property
