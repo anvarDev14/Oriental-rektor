@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  rector_bot:
+    build: .
+    container_name: rector_feedback_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./database.db:/app/database.db
+    environment:
+      - TZ=Asia/Tashkent
+    networks:
+      - bot_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  bot_network:
+    driver: bridge
+
+
