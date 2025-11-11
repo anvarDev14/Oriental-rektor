@@ -4,13 +4,28 @@ from typing import List
 
 
 class Database:
-    def __init__(self, path_to_db="database.db"):
-        # Database uchun papka yaratish
-        db_dir = os.path.dirname(path_to_db)
-        if db_dir and not os.path.exists(db_dir):
-            os.makedirs(db_dir, exist_ok=True)
+    _instance = None
+    _initialized = False
 
-        self.path_to_db = path_to_db
+    def __new__(cls, path_to_db=None):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, path_to_db=None):
+        if not Database._initialized:
+            if path_to_db is None:
+                data_dir = "/app/data"
+                os.makedirs(data_dir, exist_ok=True)
+                path_to_db = os.path.join(data_dir, "database.db")
+
+            # Database uchun papka yaratish
+            db_dir = os.path.dirname(path_to_db)
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+
+            self.path_to_db = path_to_db
+            Database._initialized = True
 
     @property
     def connection(self):
@@ -20,7 +35,6 @@ class Database:
         if not parameters:
             parameters = ()
         connection = self.connection
-        connection.set_trace_callback(logger)
         cursor = connection.cursor()
         data = None
         cursor.execute(sql, parameters)
@@ -87,12 +101,3 @@ class Database:
     def get_channel_by_id(self, channel_id: str):
         sql = "SELECT * FROM channels WHERE channel_id = ?"
         return self.execute(sql, parameters=(channel_id,), fetchone=True)
-
-
-def logger(statement):
-    print(f"""
-_____________________________________________________        
-Executing: 
-{statement}
-_____________________________________________________
-""")

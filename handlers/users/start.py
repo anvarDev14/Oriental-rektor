@@ -1,5 +1,6 @@
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
+import os
 
 from loader import dp
 from utils.db_api.database import Database
@@ -9,7 +10,10 @@ from data.config import ADMINS
 
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message):
-    db = Database()
+    # Database yo'lini to'g'ri ko'rsatish
+    data_dir = "/app/data"
+    db_path = os.path.join(data_dir, "database.db")
+    db = Database(path_to_db=db_path)
 
     # Foydalanuvchini bazaga qo'shish
     db.add_user(

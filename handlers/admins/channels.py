@@ -9,6 +9,20 @@ from keyboards.default.menu import cancel_menu, admin_menu
 from utils.db_api.database import Database
 
 
+import os
+
+# Faylning boshida, import qatorlaridan keyin:
+def get_db():
+    data_dir = "/app/data"
+    db_path = os.path.join(data_dir, "database.db")
+    return Database(path_to_db=db_path)
+
+# Keyin barcha `db = Database()` o'rniga:
+# db = get_db()
+
+
+
+
 @dp.message_handler(IsAdmin(), text="📺 Kanallar")
 async def channels_menu(message: types.Message):
     db = Database()

@@ -6,6 +6,18 @@ from loader import bot
 from utils.db_api.database import Database
 from keyboards.inline.admin_keyboard import check_subscription_keyboard
 from data.config import ADMINS
+import os
+
+# get_db funksiyasini qo'shing:
+def get_db():
+    data_dir = "/app/data"
+    db_path = os.path.join(data_dir, "database.db")
+    from utils.db_api.database import Database
+    return Database(path_to_db=db_path)
+
+# Keyin barcha `db = Database()` o'rniga:
+# db = get_db()
+
 
 
 class CheckSubscription(BaseMiddleware):
