@@ -1,170 +1,114 @@
-# 📝 Rektor Feedback Bot
+# 📋 Telegram Bot Davomat Tizimi
 
-Talabalarning fikr va takliflarini rektorga yetkazish uchun Telegram bot.
+## O'rnatish
 
-## 🎯 Asosiy funksiyalar
-
-### Talabalar uchun:
-- ✍️ Fikr va takliflarni yozish
-- ✅ Xabarni tasdiqlash
-- ✏️ Xabarni yangilash/o'zgartirish
-- ❌ Xabarni bekor qilish
-- 📸 Rasm, video, audio va boshqa formatlarni yuborish
-
-### Admin (Rektor) uchun:
-- 📊 **Statistika** - foydalanuvchilar soni va kanallar
-- 📢 **Reklama yuborish** - barcha foydalanuvchilarga xabar yuborish
-  - Oddiy xabar yoki Forward
-  - Hozir yoki keyinroq yuborish (5m, 2h, 1d, 1w)
-  - Har qanday kontent turi (matn, rasm, video, audio)
-- 📺 **Kanallar** - majburiy obuna kanallari
-  - Kanal qo'shish
-  - Kanal o'chirish
-  - Kanallar ro'yxati
-
-### Xususiyatlar:
-- 🔒 Majburiy obuna tizimi
-- 💾 SQLite database
-- 🎨 Chiroyli interfeys
-- ⏱️ Rejalashtirilgan xabarlar
-- 📝 Xabarni tasdiqlash tizimi
-
-## 🚀 O'rnatish
-
-### 1. Repozitoriyni clone qiling:
-```bash
-git clone <repository_url>
-cd rector_feedback_bot
-```
-
-### 2. Virtual muhit yarating:
-```bash
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# yoki
-venv\Scripts\activate  # Windows
-```
-
-### 3. Kutubxonalarni o'rnating:
+### 1. Kutubxonalarni o'rnatish
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. .env faylni sozlang:
-```
-BOT_TOKEN=sizning_bot_tokeningiz
-ADMINS=123456789,987654321
-IP=localhost
-```
-
-**Bot token olish:**
-1. @BotFather ga murojaat qiling
-2. /newbot buyrug'ini yuboring
-3. Bot nomi va username kiriting
-4. Tokenni .env fayliga joylashtiring
-
-**Admin ID topish:**
-1. @userinfobot ga /start yuboring
-2. O'z ID raqamingizni oling
-3. ADMINS ga qo'shing (vergul bilan ajratilgan)
-
-### 5. Botni ishga tushiring:
+### 2. .env faylni sozlash
+`.env.example` dan `.env` yarating:
 ```bash
-python app.py
+cp .env.example .env
 ```
 
-## 📁 Struktura
+Keyin `.env` faylni tahrirlang:
+```env
+BOT_TOKEN=1234567890:ABCDefghIJKLmnopQRSTuvwxYZ
+BOT_USERNAME=sam_oriental_support_bot
+ADMINS=123456789,987654321
+DATABASE_PATH=data/main.db
+```
+
+### 3. Botga qo'shish
+
+`app.py` yoki asosiy faylda:
+```python
+from aiogram import Bot, Dispatcher, executor
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
+from attendance_module import (
+    register_all_attendance_handlers,
+    handle_attendance_deeplink,
+    BOT_TOKEN, AttendanceDB
+)
+from attendance_module.keyboards import user_main_menu
+
+bot = Bot(token=BOT_TOKEN, parse_mode="HTML")
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
+
+# Start handler
+@dp.message_handler(commands=['start'])
+async def cmd_start(message):
+    args = message.get_args()
+    
+    # QR dan kelgan bo'lsa
+    if args and args.startswith("att_"):
+        await handle_attendance_deeplink(message)
+        return
+    
+    # Oddiy start
+    db = AttendanceDB()
+    is_registered = db.is_student_registered(message.from_user.id)
+    
+    await message.answer(
+        f"Assalomu alaykum, {message.from_user.full_name}!",
+        reply_markup=user_main_menu(is_registered=is_registered)
+    )
+
+# Davomat handlerlarini qo'shish
+register_all_attendance_handlers(dp)
+
+if __name__ == '__main__':
+    executor.start_polling(dp)
+```
+
+## Qanday ishlaydi
 
 ```
-rector_feedback_bot/
-├── app.py                  # Asosiy fayl
-├── loader.py               # Bot va dispatcher
-├── requirements.txt        # Kutubxonalar
-├── .env                    # Sozlamalar
-├── database.db            # Database (avtomatik yaratiladi)
-│
-├── data/
-│   ├── __init__.py
-│   └── config.py          # Konfiguratsiya
-│
+1️⃣ Talaba "📋 Ro'yxatdan o'tish" bosadi
+   └── Ism, ID, Yo'nalish, Guruh kiritadi
+
+2️⃣ Admin "📋 Davomat" → "🆕 Yangi dars" bosadi
+   └── Yo'nalish → Guruh → Fan → Davomiylik → QR oladi
+
+3️⃣ QR kod proyektorda ko'rsatiladi
+   └── Talabalar telefon kamerasi bilan skanerlaydi
+
+4️⃣ Talaba QR skanerlaydi
+   └── Bot ochiladi → Avtomatik davomat ✅
+
+5️⃣ Admin "📊 Hisobot olish" bosadi
+   └── Excel fayl yuklab oladi
+```
+
+## Fayl strukturasi
+
+```
+attendance_module/
+├── .env.example          # Env namuna
+├── config.py             # Konfiguratsiya
+├── requirements.txt      # Kutubxonalar
+├── __init__.py
 ├── handlers/
-│   ├── users/             # Foydalanuvchi handlerlari
-│   │   ├── start.py
-│   │   └── send_message.py
-│   └── admins/            # Admin handlerlari
-│       ├── admin_panel.py
-│       ├── statistics.py
-│       ├── broadcast.py
-│       └── channels.py
-│
+│   ├── registration.py   # Ro'yxatdan o'tish
+│   ├── attendance.py     # QR davomat
+│   └── admin_panel.py    # Admin boshqaruvi
 ├── keyboards/
-│   ├── default/           # Oddiy klaviaturalar
-│   │   └── menu.py
-│   └── inline/            # Inline klaviaturalar
-│       └── admin_keyboard.py
-│
-├── middlewares/
-│   ├── __init__.py
-│   └── check_subscription.py
-│
-├── filters/
-│   ├── __init__.py
-│   └── is_admin.py
-│
+│   └── attendance_kb.py  # Tugmalar
 ├── states/
-│   ├── __init__.py
-│   └── message_states.py
-│
+│   └── attendance_states.py
 └── utils/
-    ├── db_api/
-    │   └── database.py    # Database moduli
-    ├── notify_admins.py
-    └── set_bot_commands.py
+    ├── attendance_db.py  # Database
+    ├── qr_generator.py   # QR yaratish
+    └── excel_export.py   # Excel hisobot
 ```
 
-## 🎮 Foydalanish
+## Admin menusiga tugma qo'shish
 
-### Talaba:
-1. Botga /start yuboring
-2. "✍️ Xabar yozish" tugmasini bosing
-3. Fikringizni yozing
-4. Xabarni tasdiqlang
-
-### Admin:
-1. Botga /start yuboring (admin sifatida)
-2. Admin panel ochiladi:
-   - 📊 Statistika - foydalanuvchilar sonini ko'rish
-   - 📢 Reklama yuborish - xabar yuborish
-   - 📺 Kanallar - majburiy obuna sozlash
-
-## 🔧 Texnologiyalar
-
-- **Python 3.8+**
-- **aiogram 2.14+** - Telegram Bot API
-- **SQLite3** - Database
-- **environs** - Environment o'zgaruvchilar
-
-## 📝 Eslatma
-
-- Bot ishga tushganda `database.db` avtomatik yaratiladi
-- Adminlar majburiy obunadan ozod
-- Xabarlar format saqlanadi (matn, rasm, video)
-- Reklama har qanday vaqtga rejalashtirilishi mumkin
-
-## 🤝 Yordam
-
-Savollar yoki muammolar bo'lsa:
-1. README.md ni qaytadan o'qing
-2. .env faylni tekshiring
-3. Bot tokenni to'g'ri kiriting
-4. Admin ID to'g'ri ekanligini tekshiring
-
-## 📄 Litsenziya
-
-MIT License - istalgan maqsadda foydalanish mumkin.
-
----
-
-**Muallif:** Claude AI
-**Versiya:** 1.0.0
-**Sana:** 2025
+Mavjud botingizda admin menusiga qo'shing:
+```python
+keyboard.add(KeyboardButton("📋 Davomat"))
+```
