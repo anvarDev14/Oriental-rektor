@@ -129,19 +129,20 @@ def attendance_admin_menu() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def session_actions(session_id: str) -> InlineKeyboardMarkup:
+def session_actions(session_id: str):
+    """Sessiya uchun amallar tugmalari"""
     keyboard = InlineKeyboardMarkup(row_width=2)
-    
     keyboard.add(
         InlineKeyboardButton("🔄 QR yangilash", callback_data=f"refresh_qr:{session_id}"),
         InlineKeyboardButton("📊 Davomat", callback_data=f"session_att:{session_id}")
     )
     keyboard.add(
-        InlineKeyboardButton("🛑 Yopish", callback_data=f"close_session:{session_id}"),
+        InlineKeyboardButton("🔴 Yopish", callback_data=f"close_session:{session_id}"),
         InlineKeyboardButton("📥 Excel", callback_data=f"export_session:{session_id}")
     )
-    keyboard.add(InlineKeyboardButton("🔙 Orqaga", callback_data="back_to_sessions"))
-    
+    keyboard.add(
+        InlineKeyboardButton("🔙 Orqaga", callback_data="back_to_attendance")
+    )
     return keyboard
 
 
